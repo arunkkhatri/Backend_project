@@ -125,11 +125,20 @@ public class TestAccount {
 			con = database.getConnection();
 			//Class.forName("com.mysql.jdbc.Driver");
 			//con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","akumar15");
-			Statement statement = con.createStatement();
+			Statement mystate = con.createStatement();
+			ResultSet res = mystate.executeQuery("select * from accounts where accno= "+accno+"");
+			if(res.next()){
+				Statement statement = con.createStatement();
+				statement.executeUpdate("delete from accounts where accno="+accno+"");
+				
+				System.out.println("Account " + accno + " removed..");
+				
+			}
+			else{
+				System.err.println("Sorry, Account doesn't exists...");
+			}
 			
-			statement.executeUpdate("delete from accounts where accno="+accno+"");
 			
-			System.out.println("Account " + accno + " removed..");
 			con.commit();
 			con.close();
 			
@@ -159,23 +168,32 @@ public class TestAccount {
 			//Class.forName("com.mysql.jdbc.Driver");
 			//con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","akumar15");
 			Statement mystate = con.createStatement();
-			ResultSet rs  = mystate.executeQuery("select balance from accounts where accno="+accno+"");
-			//balance = rs.getDouble("balance");
-			if(rs.next()){
-				balance = rs.getInt("balance");
+			ResultSet res = mystate.executeQuery("select * from accounts where accno= "+accno+"");
+			if(res.next()){
+				Statement mystatement = con.createStatement();
+				ResultSet rs  = mystatement.executeQuery("select balance from accounts where accno="+accno+"");
+				//balance = rs.getDouble("balance");
+				if(rs.next()){
+					balance = rs.getInt("balance");
+				}
+				//System.out.println(accno);
+				//System.out.println(amount);
+				//System.out.println(balance);
+				//System.out.println(balance);
+				if((balance-amount)>2000){
+					Statement statement = con.createStatement();
+					statement.executeUpdate("update accounts set balance= "+(balance-amount)+" where accno="+accno+"");
+					System.out.println("Account "+accno+" have been debited by "+amount+"");
+				}
+				else
+				{
+					System.out.println("Insufficient Balance");
+				}
 			}
-			//System.out.println(accno);
-			//System.out.println(amount);
-			//System.out.println(balance);
-			//System.out.println(balance);
-			if((balance-amount)>2000){
-				Statement statement = con.createStatement();
-				statement.executeUpdate("update accounts set balance= "+(balance-amount)+" where accno="+accno+"");
-				System.out.println("Account "+accno+" have been debited by "+amount+"");
-			}
+			
 			else
 			{
-				System.out.println("Insufficient Balance");
+				System.out.println("Sorry, Account doesn't exists...");
 			}
 			con.commit();
 			con.close();
@@ -205,20 +223,30 @@ public class TestAccount {
 			//Class.forName("com.mysql.jdbc.Driver");
 			//con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","akumar15");
 			Statement mystate = con.createStatement();
-			ResultSet rs = mystate.executeQuery("select * from accounts where accno="+accno+";");
-			//balance = rs.getDouble("balance");
-			if(rs.next()){
-				balance = rs.getInt("balance");
+			ResultSet res = mystate.executeQuery("select * from accounts where accno= "+accno+"");
+			if(res.next()){
+				Statement mystatement = con.createStatement();
+				ResultSet rs = mystatement.executeQuery("select * from accounts where accno="+accno+";");
+				//balance = rs.getDouble("balance");
+				if(rs.next()){
+					balance = rs.getInt("balance");
+				}
+				if((balance+amount)<50000){
+					Statement statement = con.createStatement();
+					statement.executeUpdate("update accounts set balance= "+(balance+amount)+" where accno="+accno+"");
+					System.out.println("Account "+accno+" have been credited by "+amount+"");
+				}
+				else
+				{
+					System.out.println("Amount limit exceeded for account");
+				}
+				
 			}
-			if((balance+amount)<50000){
-				Statement statement = con.createStatement();
-				statement.executeUpdate("update accounts set balance= "+(balance+amount)+" where accno="+accno+"");
-				System.out.println("Account "+accno+" have been credited by "+amount+"");
+			else {
+				System.out.println("Sorry, Account doesn't exists...");
 			}
-			else
-			{
-				System.out.println("Amount limit exceeded for account");
-			}
+			
+			
 			con.commit();
 			con.close();
 		} catch (Exception e) {
@@ -250,25 +278,44 @@ public class TestAccount {
 			//Class.forName("com.mysql.jdbc.Driver");
 			//con=DriverManager.getConnection("jdbc:mysql://localhost:3306/bank","root","akumar15");
 			Statement mystate = con.createStatement();
-			ResultSet rs = mystate.executeQuery("select balance from accounts where accno="+source+";");
-			if(rs.next()){
-				balanceSource = rs.getInt("balance");
+			ResultSet res = mystate.executeQuery("select * from accounts where accno= "+source+"");
+			if(res.next()){
+				Statement mystatement = con.createStatement();
+				ResultSet rs = mystatement.executeQuery("select balance from accounts where accno="+source+";");
+				if(rs.next()){
+					balanceSource = rs.getInt("balance");
+				}
+				
+			}
+			else {
+				System.out.println("Sorry, Source account doesn't exists...");
 			}
 			//balanceSource = rs.getInt("balance");
-			rs = mystate.executeQuery("select balance from accounts where accno="+dest+";");
-			if(rs.next()){
-				balanceDest = rs.getInt("balance");
+			Statement mystate1 = con.createStatement();
+			ResultSet res1 = mystate1.executeQuery("select * from accounts where accno= "+dest+"");
+			if(res1.next()){
+				Statement myStatement1 = con.createStatement();
+				ResultSet rs1 = myStatement1.executeQuery("select balance from accounts where accno="+dest+";");
+				if(rs1.next()){
+				balanceDest = rs1.getInt("balance");
 			}
-			//balanceDest = rs.getInt("balance");
+			}
+			else {
+				System.out.println("Sorry, Destination account doesn't exists...");
+			}
+			
 			if((balanceSource-amount)>2000 && balanceDest+amount < 50000){
 				mystate.executeUpdate("update accounts set balance= "+(balanceSource -amount)+" where accno="+source+"");
 				mystate.executeUpdate("update accounts set balance= "+(balanceDest+amount)+" where accno="+dest+"");
 				System.out.println("Account "+source+" have been debited by "+amount+"");
 				System.out.println("Account "+dest+" have been credited by "+amount+"");
 			}
+			
+			
 			con.commit();
 			con.close();
-		} catch (Exception e) {
+			}
+		catch (Exception e) {
 			// TODO: handle exception
 			System.out.println(e);
 		}
